@@ -6,6 +6,7 @@ import { faMinus, faPlus } from "@fortawesome/free-solid-svg-icons";
 const TreeView = ({ data }) => {
   const [expandedNodes, setExpandedNodes] = useState({});
   const [selectedNodes, setSelectedNodes] = useState({});
+  const [updatedTree, setUpdatedTree] = useState([]); 
 
   const toggleExpand = (id) => {
     setExpandedNodes((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -60,7 +61,7 @@ const TreeView = ({ data }) => {
             )}
             <span>{label}</span>
           </div>
-          {expandedNodes[id] && !isLeaf && (
+          {!expandedNodes[id] && !isLeaf && (
             <div>{renderTree(node.values || node.children, level + 1, checkInput)}</div>
           )}
         </div>
@@ -68,7 +69,7 @@ const TreeView = ({ data }) => {
     });
   };
 
-  // Función para agregar el campo 'checked' basado en el estado actual de 'selectedNodes'
+  
   const addCheckedField = (nodes, selectedNodes) => {
     return nodes.map((node) => {
       const id = node.value || node.name;
@@ -76,10 +77,10 @@ const TreeView = ({ data }) => {
 
       const newNode = {
         ...node,
-        checked: isChecked, // Agrega el campo 'checked'
+        checked: isChecked, 
       };
 
-      // Si tiene hijos, recursivamente añadir el campo 'checked'
+    
       if (node.values || node.children) {
         newNode.values = addCheckedField(node.values || node.children, selectedNodes);
       }
@@ -88,33 +89,61 @@ const TreeView = ({ data }) => {
     });
   };
 
-  // Generar una nueva estructura con el campo 'checked'
   const getTreeWithChecked = () => {
     return addCheckedField(treeData, selectedNodes);
   };
 
-  // Ejemplo de uso para guardar o visualizar el árbol actualizado
+ 
   const handleSave = () => {
     const updatedTree = getTreeWithChecked();
-    console.log(updatedTree); // Aquí puedes usar o guardar el nuevo árbol
+    setUpdatedTree(updatedTree); 
+    console.log(updatedTree)
   };
 
+  const extractCheckedTags = (nodes, selectedNodes) => {
+    let tags = [];
+    nodes.forEach((node) => {
+      const id = node.value || node.name;
+      if (selectedNodes[id]) {
+        tags.push(node.name || node.display);
+      }
+      if (node.values || node.children) {
+        tags = tags.concat(
+          extractCheckedTags(node.values || node.children, selectedNodes)
+        );
+      }
+    });
+    return tags;
+  };
+
+  const selectedTags = extractCheckedTags(data, selectedNodes);
+
   return (
-   <div>
-     <div>
-      <button onClick={handleSave} style={{ marginBottom: 16 }}>
-        Guardar estado
-      </button>
-      {renderTree(data)}
-    </div>
     <div>
-      {updatedTree && updatedTree.map((data,index)=>{
-        <span key={index}>
-          {data.checked && data.name || data.display }
+        <div>
+        {selectedTags.map((tag, index) => (
+          <span
+            key={index}
+            style={{
+              margin: "0 8px",
+              padding: "4px 8px",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+            }}
+          >
+            {tag}
         </span>
-      })}
+        ))}
+      </div>
+      <div>
+        
+        {renderTree(data)}
+      </div>
+   
+      <button onClick={handleSave} style={{ marginBottom: 16 }}>
+          Guardar 
+        </button>
     </div>
-   </div>
   );
 };
 

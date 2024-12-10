@@ -16,9 +16,11 @@ const TreeView = ({ data }) => {
     setSelectedNodes((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const renderTree = (nodes, level = 0, input = "MULTIPLE") => {
-    return nodes.map((node) => {
-      const id = node.value || node.name;
+  const generateId = (level, index) => `${level}-${index}`;
+
+  const renderTree = (nodes, level = 0, input = "MULTIPLE", parentId = "") => {
+    return nodes.map((node, index) => {
+      const id = parentId ? `${parentId}-${index}` : generateId(level, index);
       const isLeaf = !(node.values || node.children)?.length;
       const label = node.name || node.display;
 
@@ -61,28 +63,37 @@ const TreeView = ({ data }) => {
             )}
             <span>{label}</span>
           </div>
-          {expandedNodes[id] && !isLeaf && (
-            <div>{renderTree(node.values || node.children, level + 1, checkInput)}</div>
+          {!expandedNodes[id] && !isLeaf && (
+            <div>
+              {renderTree(
+                node.values || node.children,
+                level + 1,
+                checkInput,
+                id
+              )}
+            </div>
           )}
         </div>
       );
     });
   };
 
-  
-  const addCheckedField = (nodes, selectedNodes) => {
-    return nodes.map((node) => {
-      const id = node.value || node.name;
+  const addCheckedField = (nodes, selectedNodes, parentId = "") => {
+    return nodes.map((node, index) => {
+      const id = parentId ? `${parentId}-${index}` : generateId(0, index);
       const isChecked = !!selectedNodes[id];
 
       const newNode = {
         ...node,
-        checked: isChecked, 
+        checked: isChecked,
       };
 
-    
       if (node.values || node.children) {
-        newNode.values = addCheckedField(node.values || node.children, selectedNodes);
+        newNode.values = addCheckedField(
+          node.values || node.children,
+          selectedNodes,
+          id
+        );
       }
 
       return newNode;
@@ -90,26 +101,25 @@ const TreeView = ({ data }) => {
   };
 
   const getTreeWithChecked = () => {
-    return addCheckedField(treeData, selectedNodes);
+    return addCheckedField(data, selectedNodes);
   };
 
- 
   const handleSave = () => {
     const updatedTree = getTreeWithChecked();
     setUpdatedTree(updatedTree); 
-    console.log(updatedTree)
+    console.log(updatedTree);
   };
 
-  const extractCheckedTags = (nodes, selectedNodes) => {
+  const extractCheckedTags = (nodes, selectedNodes, parentId = "") => {
     let tags = [];
-    nodes.forEach((node) => {
-      const id = node.value || node.name;
+    nodes.forEach((node, index) => {
+      const id = parentId ? `${parentId}-${index}` : generateId(0, index);
       if (selectedNodes[id]) {
         tags.push(node.name || node.display);
       }
       if (node.values || node.children) {
         tags = tags.concat(
-          extractCheckedTags(node.values || node.children, selectedNodes)
+          extractCheckedTags(node.values || node.children, selectedNodes, id)
         );
       }
     });
@@ -120,7 +130,7 @@ const TreeView = ({ data }) => {
 
   return (
     <div>
-        <div>
+      <div>
         {selectedTags.map((tag, index) => (
           <span
             key={index}
@@ -132,17 +142,13 @@ const TreeView = ({ data }) => {
             }}
           >
             {tag}
-        </span>
+          </span>
         ))}
       </div>
-      <div>
-        
-        {renderTree(data)}
-      </div>
-   
+      <div>{renderTree(data)}</div>
       <button onClick={handleSave} style={{ marginBottom: 16 }}>
-          Guardar 
-        </button>
+        Guardar
+      </button>
     </div>
   );
 };
