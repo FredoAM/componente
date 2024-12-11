@@ -3,7 +3,7 @@ import { treeData } from "./data";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMinus, faPlus } from "@fortawesome/free-solid-svg-icons";
 
-const TreeView = ({ data }) => {
+const Tree = ({ data }) => {
   const [expandedNodes, setExpandedNodes] = useState({});
   const [selectedNodes, setSelectedNodes] = useState({});
   const [updatedTree, setUpdatedTree] = useState([]); 
@@ -21,7 +21,7 @@ const TreeView = ({ data }) => {
   const renderTree = (nodes, level = 0, input = "MULTIPLE", parentId = "") => {
     return nodes.map((node, index) => {
       const id = parentId ? `${parentId}-${index}` : generateId(level, index);
-      const isLeaf = !(node.values || node.children)?.length;
+      const noChildren = !(node.values || node.children)?.length;
       const label = node.name || node.display;
 
       const checkInput = node.selectionType || input;
@@ -29,7 +29,7 @@ const TreeView = ({ data }) => {
       return (
         <div key={id} style={{ marginLeft: level * 10 }}>
           <div style={{ display: "flex", alignItems: "center" }}>
-            {!isLeaf && (
+            {!noChildren && (
               <button
                 onClick={() => toggleExpand(id)}
                 style={{
@@ -63,7 +63,7 @@ const TreeView = ({ data }) => {
             )}
             <span>{label}</span>
           </div>
-          {!expandedNodes[id] && !isLeaf && (
+          {!expandedNodes[id] && !noChildren && (
             <div>
               {renderTree(
                 node.values || node.children,
@@ -100,17 +100,17 @@ const TreeView = ({ data }) => {
     });
   };
 
-  const getTreeWithChecked = () => {
+  const getCheckedTree = () => {
     return addCheckedField(data, selectedNodes);
   };
 
   const handleSave = () => {
-    const updatedTree = getTreeWithChecked();
+    const updatedTree = getCheckedTree();
     setUpdatedTree(updatedTree); 
     console.log(updatedTree);
   };
 
-  const extractCheckedTags = (nodes, selectedNodes, parentId = "") => {
+  const checkedTags = (nodes, selectedNodes, parentId = "") => {
     let tags = [];
     nodes.forEach((node, index) => {
       const id = parentId ? `${parentId}-${index}` : generateId(0, index);
@@ -119,14 +119,14 @@ const TreeView = ({ data }) => {
       }
       if (node.values || node.children) {
         tags = tags.concat(
-          extractCheckedTags(node.values || node.children, selectedNodes, id)
+          checkedTags(node.values || node.children, selectedNodes, id)
         );
       }
     });
     return tags;
   };
 
-  const selectedTags = extractCheckedTags(data, selectedNodes);
+  const selectedTags = checkedTags(data, selectedNodes);
 
   return (
     <div>
@@ -156,7 +156,7 @@ const TreeView = ({ data }) => {
 export default function App() {
   return (
     <div>
-      <TreeView data={treeData} />
+      <Tree data={treeData} />
     </div>
   );
 }
