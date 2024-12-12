@@ -12,20 +12,37 @@ const Tree = ({ data }) => {
     setExpandedNodes((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const toggleSelect = (id) => {
-    setSelectedNodes((prev) => ({ ...prev, [id]: !prev[id] }));
+  const toggleSelect = (id, parentId, e) => {
+    const { type } = e.target; 
+  
+    setSelectedNodes((prev) => {
+      const updated = { ...prev };
+  
+      if (type === "radio") {
+        Object.keys(updated).forEach((key) => {
+          if (key.startsWith(`${parentId}-`)) { 
+            updated[key] = false;
+          }
+        });
+      }
+  
+      updated[id] = type === "checkbox" ? !prev[id] : true; 
+      return updated;
+    });
   };
-
+  
+  
+  
   const generateId = (level, index) => `${level}-${index}`;
 
   const renderTree = (nodes, level = 0, input = "MULTIPLE", parentId = "") => {
     return nodes.map((node, index) => {
-      const id = parentId ? `${parentId}-${index}` : generateId(level, index);
+      const id = parentId ? `${parentId}-${index}` : `${level}-${index}`;
       const noChildren = !(node.values || node.children)?.length;
       const label = node.name || node.display;
-
+  
       const checkInput = node.selectionType || input;
-
+  
       return (
         <div key={id} style={{ marginLeft: level * 10 }}>
           <div style={{ display: "flex", alignItems: "center" }}>
@@ -49,15 +66,16 @@ const Tree = ({ data }) => {
             {node.selectionType ? (
               <input
                 type="checkbox"
-                checked={selectedNodes[id] || false}
-                onChange={() => toggleSelect(id)}
+                checked={!!selectedNodes[id]}
+                onChange={(e) => toggleSelect(id, parentId, e)}
                 style={{ marginRight: 8 }}
               />
             ) : (
               <input
                 type={checkInput === "MULTIPLE" ? "checkbox" : "radio"}
-                checked={selectedNodes[id] || false}
-                onChange={() => toggleSelect(id)}
+                name={checkInput !== "MULTIPLE" ? `grupo-radio-${parentId}` : undefined}
+                checked={!!selectedNodes[id]}
+                onChange={(e) => toggleSelect(id, parentId, e)}
                 style={{ marginRight: 8 }}
               />
             )}
@@ -69,7 +87,7 @@ const Tree = ({ data }) => {
                 node.values || node.children,
                 level + 1,
                 checkInput,
-                id
+                id 
               )}
             </div>
           )}
@@ -82,23 +100,22 @@ const Tree = ({ data }) => {
     return nodes.map((node, index) => {
       const id = parentId ? `${parentId}-${index}` : generateId(0, index);
       const isChecked = !!selectedNodes[id];
-
+  
       const newNode = {
         ...node,
         checked: isChecked,
       };
-
-      if (node.values || node.children) {
-        newNode.values = addCheckedField(
-          node.values || node.children,
-          selectedNodes,
-          id
-        );
+  
+      if (node.children) {
+        newNode.children = addCheckedField(node.children, selectedNodes, id);
+      } else if (node.values) {
+        newNode.values = addCheckedField(node.values, selectedNodes, id);
       }
-
+  
       return newNode;
     });
   };
+  
 
   const getCheckedTree = () => {
     return addCheckedField(data, selectedNodes);
@@ -109,6 +126,11 @@ const Tree = ({ data }) => {
     setUpdatedTree(updatedTree); 
     console.log(updatedTree);
   };
+
+  const handleCancel = () => {
+    setSelectedNodes({}); 
+  };
+  
 
   const checkedTags = (nodes, selectedNodes, parentId = "") => {
     let tags = [];
@@ -145,9 +167,12 @@ const Tree = ({ data }) => {
           </span>
         ))}
       </div>
-      <div>{renderTree(data)}</div>
+      <div style={{ marginBottom: 56, marginTop :50 }}>{renderTree(data)}</div>
+      <button onClick={handleCancel} style={{ marginRight: 50 }}>
+        Cancel
+      </button>
       <button onClick={handleSave} style={{ marginBottom: 16 }}>
-        Guardar
+        Save
       </button>
     </div>
   );
