@@ -8,6 +8,6 @@ import Prueba from "./prueba";
 
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-      <App />
+      <Prueba />
   </React.StrictMode>
 );

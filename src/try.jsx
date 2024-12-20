@@ -44,13 +44,13 @@ const Tree = ({ newData }) => {
       const checkInput = node.selectionType || input;
       const checkType = node.type || "checkbox";
   
-      // Estado `checked` del nodo actual
-      const isChecked = !!selectedNodes[id]; // Convertir a booleano explícitamente
+      const isChecked = !!selectedNodes[id];
   
-      // Determinar si los hijos deben estar deshabilitados
       const isDisabled = parentChecked
-        ? false // Padre habilitado, hijo depende de su propio estado
-        : node.type === "checkbox" || node.type === "radio"; // Deshabilitar solo si el padre es radio y no está seleccionado
+        ? false 
+        : node.type === "checkbox" || node.type === "radio"; 
+  
+      const showCheckbox = checkType === "checkbox" && (node.children?.length === 0 || !node.children);
   
       return (
         <div key={id} style={{ marginLeft: level * 10 }}>
@@ -72,14 +72,24 @@ const Tree = ({ newData }) => {
                 )}
               </button>
             )}
-            {!node.selectionType && ( // MANTENIENDO ESTA CONDICIÓN
+            {!node.selectionType && checkType === "radio" && (
               <input
                 type={checkType}
                 name={checkType === "radio" ? `grupo-radio-${parentId}` : undefined}
                 checked={isChecked}
                 onChange={(e) => toggleSelect(id, parentId, e)}
                 style={{ marginRight: 8 }}
-                disabled={checkType === "radio" ? !parentChecked : isDisabled} // Habilitar o deshabilitar según el padre
+                disabled={checkType === "radio" ? !parentChecked : isDisabled}
+              />
+            )}
+            {!node.selectionType && checkType === "checkbox" && showCheckbox && ( 
+              <input
+                type={checkType}
+                name={checkType === "radio" ? `grupo-radio-${parentId}` : undefined}
+                checked={isChecked}
+                onChange={(e) => toggleSelect(id, parentId, e)}
+                style={{ marginRight: 8 }}
+                disabled={isDisabled} 
               />
             )}
             <span>{label}</span>
@@ -91,7 +101,7 @@ const Tree = ({ newData }) => {
                 level + 1,
                 checkInput,
                 id,
-                checkType === "radio" ? isChecked : parentChecked // Propagar estado solo si el padre es radio
+                checkType === "radio" ? isChecked : parentChecked 
               )}
             </div>
           )}
@@ -102,15 +112,14 @@ const Tree = ({ newData }) => {
   
   
   
+  
   const addCheckedField = (nodes, selectedNodes, parentId = "") => {
     return nodes.map((node, index) => {
       const id = parentId ? `${parentId}-${index}` : generateId(0, index);
       const isChecked = !!selectedNodes[id];
-      //const checkType = node.selectionType || selectionType;
       const newNode = {
         ...node,
         checked: isChecked,
-        //type: checkType === "MULTIPLE" ? "checkbox" : "radio",
       };
   
       if (node.children) {
@@ -185,7 +194,7 @@ const Tree = ({ newData }) => {
   );
 };
 
-export default function App() {
+export default function TESTO() {
   const [newData, setNewData] = useState(treeData);
 
   useEffect(() => {
