@@ -6,7 +6,6 @@ import { faMinus, faPlus } from "@fortawesome/free-solid-svg-icons";
 const Tree = ({ newData }) => {
   const [expandedNodes, setExpandedNodes] = useState({});
   const [selectedNodes, setSelectedNodes] = useState({});
-  const [updatedTree, setUpdatedTree] = useState([]); 
 
   const toggleExpand = (id) => {
     setExpandedNodes((prev) => ({ ...prev, [id]: !prev[id] }));
@@ -110,37 +109,8 @@ const Tree = ({ newData }) => {
     });
   };
   
-  
-  
-  
-  const addCheckedField = (nodes, selectedNodes, parentId = "") => {
-    return nodes.map((node, index) => {
-      const id = parentId ? `${parentId}-${index}` : generateId(0, index);
-      const isChecked = !!selectedNodes[id];
-      const newNode = {
-        ...node,
-        checked: isChecked,
-      };
-  
-      if (node.children) {
-        newNode.children = addCheckedField(node.children, selectedNodes, id, );
-      } else if (node.values) {
-        newNode.values = addCheckedField(node.values, selectedNodes, id, );
-      }
-  
-      return newNode;
-    });
-  };
-  
-
-  const getCheckedTree = () => {
-    return addCheckedField(newData, selectedNodes);
-  };
-
   const handleSave = () => {
-    const updatedTree = getCheckedTree();
-    setUpdatedTree(updatedTree); 
-    console.log(updatedTree);
+    console.log(newData);
   };
 
   const handleCancel = () => {
