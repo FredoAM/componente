@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { treeData } from "./data";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMinus, faPlus } from "@fortawesome/free-solid-svg-icons";
+import { faAngleRight, faAngleDown, faX } from "@fortawesome/free-solid-svg-icons";
+import Radio from '@mui/material/Radio';
+import Checkbox from '@mui/material/Checkbox';
 
 const Tree = ({ newData }) => {
   const [expandedNodes, setExpandedNodes] = useState({});
   const [selectedNodes, setSelectedNodes] = useState({});
-
+  const [showAll, setShowAll] = useState(false);
   const toggleExpand = (id) => {
     setExpandedNodes((prev) => ({ ...prev, [id]: !prev[id] }));
   };
@@ -34,13 +36,11 @@ const Tree = ({ newData }) => {
   
   const generateId = (level, index) => `${level}-${index}`;
 
-  const renderTree = (nodes, level = 0, input = "MULTIPLE", parentId = "", parentChecked = true) => {
+  const renderTree = (nodes, level = 0, parentId = "", parentChecked = true) => {
     return nodes.map((node, index) => {
       const id = parentId ? `${parentId}-${index}` : `${level}-${index}`;
       const noChildren = !(node.values || node.children)?.length;
       const label = node.name || node.display;
-  
-      const checkInput = node.selectionType || input;
       const checkType = node.type || "checkbox";
   
       const isChecked = !!selectedNodes[id];
@@ -52,8 +52,8 @@ const Tree = ({ newData }) => {
       const showCheckbox = checkType === "checkbox" && (node.children?.length === 0 || !node.children);
   
       return (
-        <div key={id} style={{ marginLeft: level * 10 }}>
-          <div style={{ display: "flex", alignItems: "center" }}>
+        <div key={id} style={{ marginLeft: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", height: 36 }}>
             {!noChildren && (
               <button
                 onClick={() => toggleExpand(id)}
@@ -65,29 +65,27 @@ const Tree = ({ newData }) => {
                 }}
               >
                 {expandedNodes[id] ? (
-                  <FontAwesomeIcon icon={faMinus} />
+                  <FontAwesomeIcon icon={faAngleRight} />
                 ) : (
-                  <FontAwesomeIcon icon={faPlus} />
+                    <FontAwesomeIcon icon={faAngleDown} />
                 )}
               </button>
             )}
             {!node.selectionType && checkType === "radio" && (
-              <input
-                type={checkType}
+              <Radio
                 name={checkType === "radio" ? `grupo-radio-${parentId}` : undefined}
                 checked={isChecked}
                 onChange={(e) => toggleSelect(id, parentId, e)}
-                style={{ marginRight: 8 }}
+                style={{ marginRight: 5 }}
+                sx={{ '& .MuiSvgIcon-root': { fontSize: 18 } }}
                 disabled={checkType === "radio" ? !parentChecked : isDisabled}
               />
             )}
             {!node.selectionType && checkType === "checkbox" && showCheckbox && ( 
-              <input
-                type={checkType}
-                name={checkType === "radio" ? `grupo-radio-${parentId}` : undefined}
+              <Checkbox
                 checked={isChecked}
                 onChange={(e) => toggleSelect(id, parentId, e)}
-                style={{ marginRight: 8 }}
+                style={{ marginRight: 5 }}
                 disabled={isDisabled} 
               />
             )}
@@ -98,7 +96,6 @@ const Tree = ({ newData }) => {
               {renderTree(
                 node.values || node.children,
                 level + 1,
-                checkInput,
                 id,
                 checkType === "radio" ? isChecked : parentChecked 
               )}
@@ -115,6 +112,14 @@ const Tree = ({ newData }) => {
 
   const handleCancel = () => {
     setSelectedNodes({}); 
+  };
+  
+  const handleRemoveTag = (id) => {
+    setSelectedNodes((prev) => {
+      const updated = { ...prev };
+      delete updated[id]; 
+      return updated;
+    });
   };
   
 
@@ -135,31 +140,92 @@ const Tree = ({ newData }) => {
   };
 
   const selectedTags = checkedTags(newData, selectedNodes);
+  const visibleTags = showAll ? selectedTags : selectedTags.slice(0, 5);
+  const hiddenCount = selectedTags.length - 5;
 
   return (
     <div>
       <div>
-        {selectedTags.map((tag, index) => (
-          <span
-            key={index}
+      {visibleTags.map((tag, index) => (
+        <span
+          key={index}
+          style={{
+            margin: "0 8px",
+            padding: "8px 15px",
+            border: "1px solid #ccc",
+            borderRadius: "5px",
+            backgroundColor: "#3782bf",
+            color: "#fff",
+          }}
+        >
+          {tag}
+          <FontAwesomeIcon
+            icon={faX}
             style={{
-              margin: "0 8px",
-              padding: "4px 8px",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
+              marginLeft: "10px",
+              fontSize: "13px",
+              cursor: "pointer",
             }}
-          >
-            {tag}
-          </span>
-        ))}
-      </div>
+            onClick={() => handleRemoveTag(Object.keys(selectedNodes)[index])}
+          />
+        </span>
+      ))}
+
+      {!showAll && hiddenCount > 0 && (
+        <span
+          onClick={() => setShowAll(true)} 
+          style={{
+            margin: "0 8px",
+            padding: "8px 15px",
+            border: "1px solid #ccc",
+            borderRadius: "5px",
+            backgroundColor: "#eee",
+            color: "#000",
+            cursor: "pointer",
+          }}
+        >
+          +{hiddenCount} More
+        </span>
+      )}
+      {showAll && selectedTags.length > 5 && (
+        <span
+          onClick={() => setShowAll(false)} 
+          style={{
+            margin: "0 8px",
+            padding: "8px 15px",
+            border: "1px solid #ccc",
+            borderRadius: "5px",
+            backgroundColor: "#eee",
+            color: "#000",
+            cursor: "pointer",
+          }}
+        >
+          Show Less
+        </span>
+      )}
+    </div>
       <div style={{ marginBottom: 56, marginTop :50 }}>{renderTree(newData)}</div>
-      <button onClick={handleCancel} style={{ marginRight: 50 }}>
+      <div style={{ display: "flex", justifyContent: "right" }}>
+      <div onClick={handleCancel} style={{
+            margin: "0 8px",
+            padding: "8px 5px",
+            color: "#3782bf",
+            cursor: "pointer",
+          }}>
         Cancel
+      </div>
+      <button onClick={handleSave} style={{
+            margin: "0 8px",
+            padding: "8px 15px",
+            border: "1px solid #ccc",
+            borderRadius: "15px",
+            backgroundColor: "#3782bf",
+            color: "#fff",
+            cursor: "pointer",
+          }}>
+        Apply
       </button>
-      <button onClick={handleSave} style={{ marginBottom: 16 }}>
-        Save
-      </button>
+      </div>
     </div>
   );
 };

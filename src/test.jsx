@@ -1,52 +1,59 @@
-// import React, { useState } from "react";
+// import React, { useState, useEffect } from "react";
 // import { treeData } from "./data";
 // import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-// import { faMinus, faPlus } from "@fortawesome/free-solid-svg-icons";
+// import { faAngleRight, faAngleDown, faX } from "@fortawesome/free-solid-svg-icons";
+// import Radio from '@mui/material/Radio';
+// import Checkbox from '@mui/material/Checkbox';
 
-// const Tree = ({ data }) => {
+// const Tree = ({ newData }) => {
 //   const [expandedNodes, setExpandedNodes] = useState({});
 //   const [selectedNodes, setSelectedNodes] = useState({});
-//   const [updatedTree, setUpdatedTree] = useState([]);
-
+//   const [showAll, setShowAll] = useState(false);
 //   const toggleExpand = (id) => {
 //     setExpandedNodes((prev) => ({ ...prev, [id]: !prev[id] }));
 //   };
 
 //   const toggleSelect = (id, parentId, e) => {
-//     const { type } = e.target;
-
+//     const { type } = e.target; 
+  
 //     setSelectedNodes((prev) => {
 //       const updated = { ...prev };
-
+  
 //       if (type === "radio") {
 //         Object.keys(updated).forEach((key) => {
-//           if (key.startsWith(`${parentId}-`)) {
+//           if (key.startsWith(`${parentId}-`)) { 
 //             updated[key] = false;
 //           }
 //         });
 //       }
-
-//       updated[id] = type === "checkbox" ? !prev[id] : true;
+  
+//       updated[id] = type === "checkbox" ? !prev[id] : true; 
 //       return updated;
 //     });
 //   };
-
+  
+  
+  
 //   const generateId = (level, index) => `${level}-${index}`;
 
-//   const renderTree = (nodes, level = 0, input = "MULTIPLE", parentId = "") => {
+//   const renderTree = (nodes, level = 0, parentId = "", parentChecked = true) => {
 //     return nodes.map((node, index) => {
 //       const id = parentId ? `${parentId}-${index}` : `${level}-${index}`;
 //       const noChildren = !(node.values || node.children)?.length;
 //       const label = node.name || node.display;
-
-//       const checkInput = node.selectionType || input;
-
-//       const isParentChecked =
-//         selectedNodes[parentId] === undefined || selectedNodes[parentId];
-
+//       const checkType = node.type || "checkbox";
+  
+//       const isChecked = !!selectedNodes[id];
+  
+//       const isDisabled = parentChecked
+//         ? false 
+//         : node.type === "checkbox" || node.type === "radio"; 
+  
+//       const showCheckbox = checkType === "checkbox" && (node.children?.length === 0 || !node.children);
+  
 //       return (
-//         <div key={id} style={{ marginLeft: level * 10 }}>
-//           <div style={{ display: "flex", alignItems: "center" }}>
+//         <div key={id} style={{ marginLeft: 10 }}>
+//           <div style={{ display: "flex", alignItems: "center", height: 36 }}>
 //             {!noChildren && (
 //               <button
 //                 onClick={() => toggleExpand(id)}
@@ -58,20 +65,28 @@
 //                 }}
 //               >
 //                 {expandedNodes[id] ? (
-//                   <FontAwesomeIcon icon={faMinus} />
+//                   <FontAwesomeIcon icon={faAngleRight} />
 //                 ) : (
-//                   <FontAwesomeIcon icon={faPlus} />
+//                     <FontAwesomeIcon icon={faAngleDown} />
 //                 )}
 //               </button>
 //             )}
-//             {!node.selectionType && (
-//               <input
-//                 type={checkInput === "MULTIPLE" ? "checkbox" : "radio"}
-//                 name={checkInput !== "MULTIPLE" ? `grupo-radio-${parentId}` : undefined}
-//                 checked={!!selectedNodes[id]}
+//             {!node.selectionType && checkType === "radio" && (
+//               <Radio
+//                 name={checkType === "radio" ? `grupo-radio-${parentId}` : undefined}
+//                 checked={isChecked}
 //                 onChange={(e) => toggleSelect(id, parentId, e)}
-//                 style={{ marginRight: 8 }}
-//                 disabled={!isParentChecked}
+//                 style={{ marginRight: 5 }}
+//                 sx={{ '& .MuiSvgIcon-root': { fontSize: 18 } }}
+//                 disabled={checkType === "radio" ? !parentChecked : isDisabled}
+//               />
+//             )}
+//             {!node.selectionType && checkType === "checkbox" && showCheckbox && ( 
+//               <Checkbox
+//                 checked={isChecked}
+//                 onChange={(e) => toggleSelect(id, parentId, e)}
+//                 style={{ marginRight: 5 }}
+//                 disabled={isDisabled} 
 //               />
 //             )}
 //             <span>{label}</span>
@@ -81,8 +96,8 @@
 //               {renderTree(
 //                 node.values || node.children,
 //                 level + 1,
-//                 checkInput,
-//                 id
+//                 id,
+//                 checkType === "radio" ? isChecked : parentChecked 
 //               )}
 //             </div>
 //           )}
@@ -90,40 +105,23 @@
 //       );
 //     });
 //   };
-
-//   const addCheckedField = (nodes, selectedNodes, parentId = "") => {
-//     return nodes.map((node, index) => {
-//       const id = parentId ? `${parentId}-${index}` : generateId(0, index);
-//       const isChecked = !!selectedNodes[id];
-
-//       const newNode = {
-//         ...node,
-//         checked: isChecked,
-//       };
-
-//       if (node.children) {
-//         newNode.children = addCheckedField(node.children, selectedNodes, id);
-//       } else if (node.values) {
-//         newNode.values = addCheckedField(node.values, selectedNodes, id);
-//       }
-
-//       return newNode;
-//     });
-//   };
-
-//   const getCheckedTree = () => {
-//     return addCheckedField(data, selectedNodes);
-//   };
-
+  
 //   const handleSave = () => {
-//     const updatedTree = getCheckedTree();
-//     setUpdatedTree(updatedTree);
-//     console.log(updatedTree);
+//     console.log(newData);
 //   };
 
 //   const handleCancel = () => {
-//     setSelectedNodes({});
+//     setSelectedNodes({}); 
 //   };
+  
+//   const handleRemoveTag = (id) => {
+//     setSelectedNodes((prev) => {
+//       const updated = { ...prev };
+//       delete updated[id]; 
+//       return updated;
+//     });
+//   };
+  
 
 //   const checkedTags = (nodes, selectedNodes, parentId = "") => {
 //     let tags = [];
@@ -141,40 +139,126 @@
 //     return tags;
 //   };
 
-//   const selectedTags = checkedTags(data, selectedNodes);
+//   const selectedTags = checkedTags(newData, selectedNodes);
+//   const visibleTags = showAll ? selectedTags : selectedTags.slice(0, 5);
+//   const hiddenCount = selectedTags.length - 5;
 
 //   return (
 //     <div>
 //       <div>
-//         {selectedTags.map((tag, index) => (
-//           <span
-//             key={index}
+//       {visibleTags.map((tag, index) => (
+//         <span
+//           key={index}
+//           style={{
+//             margin: "0 8px",
+//             padding: "8px 15px",
+//             border: "1px solid #ccc",
+//             borderRadius: "5px",
+//             backgroundColor: "#3782bf",
+//             color: "#fff",
+//           }}
+//         >
+//           {tag}
+//           <FontAwesomeIcon
+//             icon={faX}
 //             style={{
-//               margin: "0 8px",
-//               padding: "4px 8px",
-//               border: "1px solid #ccc",
-//               borderRadius: "4px",
+//               marginLeft: "10px",
+//               fontSize: "13px",
+//               cursor: "pointer",
 //             }}
-//           >
-//             {tag}
-//           </span>
-//         ))}
-//       </div>
-//       <div style={{ marginBottom: 56, marginTop: 50 }}>{renderTree(data)}</div>
-//       <button onClick={handleCancel} style={{ marginRight: 50 }}>
+//             onClick={() => handleRemoveTag(Object.keys(selectedNodes)[index])}
+//           />
+//         </span>
+//       ))}
+
+//       {!showAll && hiddenCount > 0 && (
+//         <span
+//           onClick={() => setShowAll(true)} 
+//           style={{
+//             margin: "0 8px",
+//             padding: "8px 15px",
+//             border: "1px solid #ccc",
+//             borderRadius: "5px",
+//             backgroundColor: "#eee",
+//             color: "#000",
+//             cursor: "pointer",
+//           }}
+//         >
+//           +{hiddenCount} More
+//         </span>
+//       )}
+//       {showAll && selectedTags.length > 5 && (
+//         <span
+//           onClick={() => setShowAll(false)} 
+//           style={{
+//             margin: "0 8px",
+//             padding: "8px 15px",
+//             border: "1px solid #ccc",
+//             borderRadius: "5px",
+//             backgroundColor: "#eee",
+//             color: "#000",
+//             cursor: "pointer",
+//           }}
+//         >
+//           Show Less
+//         </span>
+//       )}
+//     </div>
+//       <div style={{ marginBottom: 56, marginTop :50 }}>{renderTree(newData)}</div>
+//       <div style={{ display: "flex", justifyContent: "right" }}>
+//       <div onClick={handleCancel} style={{
+//             margin: "0 8px",
+//             padding: "8px 5px",
+//             color: "#3782bf",
+//             cursor: "pointer",
+//           }}>
 //         Cancel
+//       </div>
+//       <button onClick={handleSave} style={{
+//             margin: "0 8px",
+//             padding: "8px 15px",
+//             border: "1px solid #ccc",
+//             borderRadius: "15px",
+//             backgroundColor: "#3782bf",
+//             color: "#fff",
+//             cursor: "pointer",
+//           }}>
+//         Apply
 //       </button>
-//       <button onClick={handleSave} style={{ marginBottom: 16 }}>
-//         Save
-//       </button>
+//       </div>
 //     </div>
 //   );
 // };
 
-// export default function Test() {
+// export default function App() {
+//   const [newData, setNewData] = useState(treeData);
+
+//   useEffect(() => {
+//     const addNewField = (nodes) => {
+//       return nodes.map((node) => {
+//         if (node.values) {
+//           node.values = node.values.map((value) => {
+//             value.checked = false;
+//             value.type = node.selectionType === "MULTIPLE" ? "checkbox" : "radio";
+//             addNewField(value.children);
+//             return value;
+//           });
+//         }
+//         return node;
+//       });
+//     };
+
+//     const updatedData = addNewField(treeData);
+//     setNewData(updatedData);
+//   }, []);
+
 //   return (
 //     <div>
-//       <Tree data={treeData} />
+//       {newData && (
+//         <>
+//           <Tree newData={newData} setNewData={setNewData} />
+//         </>
+//       )}
 //     </div>
 //   );
 // }
