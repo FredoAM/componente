@@ -177,11 +177,10 @@ const Tree = ({ newData }) => {
           style={{
             margin: "0 8px",
             padding: "8px 15px",
-            border: "1px solid #ccc",
-            borderRadius: "5px",
-            backgroundColor: "#eee",
-            color: "#000",
+            color: "#3782bf",
             cursor: "pointer",
+            fontWeight: "bold",
+            fontSize: "18px",
           }}
         >
           +{hiddenCount} More
@@ -193,11 +192,10 @@ const Tree = ({ newData }) => {
           style={{
             margin: "0 8px",
             padding: "8px 15px",
-            border: "1px solid #ccc",
-            borderRadius: "5px",
-            backgroundColor: "#eee",
-            color: "#000",
+            color: "#3782bf",
             cursor: "pointer",
+            fontWeight: "bold",
+            fontSize: "18px",
           }}
         >
           Show Less
