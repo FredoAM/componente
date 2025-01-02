@@ -106,9 +106,36 @@
 //     });
 //   };
   
-//   const handleSave = () => {
-//     console.log(newData);
+//   const addCheckedField = (nodes, selectedNodes, parentId = "") => {
+//     return nodes.map((node, index) => {
+//       const id = parentId ? `${parentId}-${index}` : generateId(0, index);
+//       const isChecked = !!selectedNodes[id];
+
+//       const newNode = {
+//         ...node,
+//         checked: isChecked,
+//       };
+
+//       if (node.children) {
+//         newNode.children = addCheckedField(node.children, selectedNodes, id);
+//       } else if (node.values) {
+//         newNode.values = addCheckedField(node.values, selectedNodes, id);
+//       }
+
+//       return newNode;
+//     });
 //   };
+
+
+//   const getCheckedTree = () => {
+//     return addCheckedField(newData, selectedNodes);
+//   };
+
+//   const handleSave = () => {
+//     const updatedTree = getCheckedTree();
+//     console.log(updatedTree);
+//   };
+
 
 //   const handleCancel = () => {
 //     setSelectedNodes({}); 
@@ -251,6 +278,7 @@
 //     const updatedData = addNewField(treeData);
 //     setNewData(updatedData);
 //   }, []);
+
 
 //   return (
 //     <div>
