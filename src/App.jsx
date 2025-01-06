@@ -5,7 +5,7 @@ import { faAngleRight, faAngleDown, faX } from "@fortawesome/free-solid-svg-icon
 import Radio from '@mui/material/Radio';
 import Checkbox from '@mui/material/Checkbox';
 
-const Tree = ({ newData }) => {
+const Tree = ({ newData}) => {
   const [expandedNodes, setExpandedNodes] = useState({});
   const [selectedNodes, setSelectedNodes] = useState({});
   const [showAll, setShowAll] = useState(false);
@@ -133,9 +133,35 @@ const Tree = ({ newData }) => {
 
   const handleSave = () => {
     const updatedTree = getCheckedTree();
-    console.log(updatedTree);
-  };
+  
+    function removeFields(nodes) {
+      return nodes.map((node) => {
+       
+        const { type, ...cleanedNode } = node;
 
+        if(node.selectionType) {
+          delete cleanedNode.checked;
+        }
+
+        if (node.children) {
+          cleanedNode.children = removeFields(node.children);
+        }
+    
+        if (node.values) {
+          cleanedNode.values = removeFields(node.values);
+        }
+    
+        return cleanedNode;
+      });
+    }
+    
+    
+    
+    const cleanedTree = removeFields(updatedTree);
+  
+    console.log(cleanedTree); 
+  };
+  
 
   const handleCancel = () => {
     setSelectedNodes({}); 
@@ -144,10 +170,22 @@ const Tree = ({ newData }) => {
   const handleRemoveTag = (id) => {
     setSelectedNodes((prev) => {
       const updated = { ...prev };
-      delete updated[id]; 
+  
+     
+      const removeWithChildren = (parentId) => {
+        Object.keys(updated).forEach((key) => {
+          if (key.startsWith(parentId)) {
+            delete updated[key];
+          }
+        });
+      };
+  
+      removeWithChildren(id);
       return updated;
     });
   };
+  
+  
   
 
   const checkedTags = (nodes, selectedNodes, parentId = "") => {
@@ -155,7 +193,7 @@ const Tree = ({ newData }) => {
     nodes.forEach((node, index) => {
       const id = parentId ? `${parentId}-${index}` : generateId(0, index);
       if (selectedNodes[id]) {
-        tags.push(node.name || node.display);
+        tags.push({ name: node.name || node.display, id });
       }
       if (node.values || node.children) {
         tags = tags.concat(
@@ -165,6 +203,7 @@ const Tree = ({ newData }) => {
     });
     return tags;
   };
+  
 
   const selectedTags = checkedTags(newData, selectedNodes);
   const visibleTags = showAll ? selectedTags : selectedTags.slice(0, 5);
@@ -173,30 +212,30 @@ const Tree = ({ newData }) => {
   return (
     <div>
       <div>
-      {visibleTags.map((tag, index) => (
+      {visibleTags.map((tag) => (
         <span
-          key={index}
-          style={{
+            key={tag.id}
+            style={{
             margin: "0 8px",
             padding: "8px 15px",
             border: "1px solid #ccc",
             borderRadius: "5px",
             backgroundColor: "#3782bf",
             color: "#fff",
-          }}
+            }}
         >
-          {tag}
-          <FontAwesomeIcon
+            {tag.name}
+            <FontAwesomeIcon
             icon={faX}
             style={{
-              marginLeft: "10px",
-              fontSize: "13px",
-              cursor: "pointer",
+                marginLeft: "10px",
+                fontSize: "13px",
+                cursor: "pointer",
             }}
-            onClick={() => handleRemoveTag(Object.keys(selectedNodes)[index])}
-          />
+            onClick={() => handleRemoveTag(tag.id)}
+            />
         </span>
-      ))}
+        ))}
 
       {!showAll && hiddenCount > 0 && (
         <span
@@ -281,7 +320,7 @@ export default function App() {
     <div>
       {newData && (
         <>
-          <Tree newData={newData} setNewData={setNewData} />
+          <Tree newData={newData} setNewData={setNewData}/>
         </>
       )}
     </div>
