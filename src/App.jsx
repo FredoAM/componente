@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import { treeData } from "./data";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleRight, faAngleDown, faX } from "@fortawesome/free-solid-svg-icons";
-import Radio from '@mui/material/Radio';
-import Checkbox from '@mui/material/Checkbox';
+import { Radio, Checkbox, Button } from "@chakra-ui/react";
 
 const Tree = ({ newData}) => {
   const [expandedNodes, setExpandedNodes] = useState({});
@@ -74,19 +73,36 @@ const Tree = ({ newData}) => {
             {!node.selectionType && checkType === "radio" && (
               <Radio
                 name={checkType === "radio" ? `grupo-radio-${parentId}` : undefined}
-                checked={isChecked}
+                isChecked={isChecked}
+                _checked={{
+                    bg: "white",
+                    borderColor: "#3782bf", 
+                    _before: {
+                      content: '""',
+                      display: "block",
+                      width: "8px", 
+                      height: "8px",
+                      borderRadius: "50%", 
+                      bg: "#3782bf", 
+                      position: "absolute", 
+                    },
+                  }}
                 onChange={(e) => toggleSelect(id, parentId, e)}
                 style={{ marginRight: 5 }}
                 sx={{ '& .MuiSvgIcon-root': { fontSize: 18 } }}
-                disabled={checkType === "radio" ? !parentChecked : isDisabled}
+                isDisabled={checkType === "radio" ? !parentChecked : isDisabled}
               />
             )}
             {!node.selectionType && checkType === "checkbox" && showCheckbox && ( 
               <Checkbox
-                checked={isChecked}
+                isChecked={isChecked}
+                _checked={{
+                    bg: "#3782bf",
+                    
+                  }}
                 onChange={(e) => toggleSelect(id, parentId, e)}
                 style={{ marginRight: 5 }}
-                disabled={isDisabled} 
+                isDisabled={isDisabled} 
               />
             )}
             <span>{label}</span>
@@ -131,36 +147,78 @@ const Tree = ({ newData}) => {
     return addCheckedField(newData, selectedNodes);
   };
 
-  const handleSave = () => {
-    const updatedTree = getCheckedTree();
+  const validateSelection = (nodes) => {
+    let isValid = true; 
+
+    const traverse = (nodes) => {
+        nodes.forEach((node) => {
+            node.values.map((value) =>{
+                if(value.children.length === 0 && value.type === "checkbox"){
+                    const hasChecked = node.values.some(
+                        (valu) =>
+                            valu.children.length === 0 &&
+                            valu.type === "checkbox" &&
+                            valu.checked === true
+                    );
+                   
+                    if (!hasChecked) {
+                        
+                        isValid = false;
+                    }
+                }
+                traverse(value.children && value.children)
+            })
+        });
+    };
+
+    traverse(nodes);
+    return isValid;
+   
+};
+
+
+
   
+
+  const handleSave = () => {
+    
+  
+    
+    const updatedTree = getCheckedTree();
+    const allValid = validateSelection(updatedTree);
+    
+    if (!allValid) {
+        alert("Select checkbox")
+    } 
+   
     function removeFields(nodes) {
       return nodes.map((node) => {
-       
         const { type, ...cleanedNode } = node;
-
-        if(node.selectionType) {
+  
+    
+        if (node.selectionType) {
           delete cleanedNode.checked;
         }
-
+  
+        
         if (node.children) {
           cleanedNode.children = removeFields(node.children);
         }
-    
+  
+      
         if (node.values) {
           cleanedNode.values = removeFields(node.values);
         }
-    
+  
         return cleanedNode;
       });
     }
-    
-    
-    
+  
     const cleanedTree = removeFields(updatedTree);
   
-    console.log(cleanedTree); 
+    console.log("acess Rules",cleanedTree); 
   };
+  
   
 
   const handleCancel = () => {
@@ -278,7 +336,7 @@ const Tree = ({ newData}) => {
           }}>
         Cancel
       </div>
-      <button onClick={handleSave} style={{
+      <Button onClick={handleSave} style={{
             margin: "0 8px",
             padding: "8px 15px",
             border: "1px solid #ccc",
@@ -288,7 +346,7 @@ const Tree = ({ newData}) => {
             cursor: "pointer",
           }}>
         Apply
-      </button>
+      </Button>
       </div>
     </div>
   );
