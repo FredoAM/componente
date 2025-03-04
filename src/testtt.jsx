@@ -1,48 +1,62 @@
-import React, { useState } from 'react';
-import { Box, Button, Collapse, VStack } from '@chakra-ui/react';
+import React, { useState, useEffect } from "react";
 import { treeData } from "./data";
+import { Flex, Select } from "@chakra-ui/react";
 
+const TreeDropdown = ({ data }) => {
+  const [selectedValues, setSelectedValues] = useState({});
+  const [options, setOptions] = useState({ 0: data });
 
-const renderMenuItems = (items, openMenus, handleToggle) => {
-  return items.map((item) => (
-    <Box key={item.value || item.name} mb={2}>
-  
-      <Button variant="link" onClick={() => handleToggle(item.value || item.name)}>
-        {item.display || item.name}
-      </Button>
-      
-      {(item.children && item.children.length > 0) || (item.values && item.values.length > 0) ? (
-        <Collapse in={openMenus[item.value || item.name]}>
-          <VStack align="start" pl={4}>
-            {item.children && item.children.length > 0 && renderMenuItems(item.children, openMenus, handleToggle)}
-            {item.values && item.values.length > 0 && renderMenuItems(item.values, openMenus, handleToggle)}
-          </VStack>
-        </Collapse>
-      ) : null}
-    </Box>
-  ));
-};
+  const handleChange = (level, selectedValue) => {
+    const newSelectedValues = { ...selectedValues, [level]: selectedValue };
+    setSelectedValues(newSelectedValues);
 
-const DropdownMenu = () => {
-  const [openMenus, setOpenMenus] = useState({});
+    const selectedNode = options[level].find(
+      (item) => item.value === selectedValue || item.name === selectedValue || item.display === selectedValue
+    );
 
-  const handleToggle = (value) => {
-    setOpenMenus((prev) => ({
-      ...prev,
-      [value]: !prev[value],
-    }));
+    const nextOptions = selectedNode?.values || selectedNode?.children || [];
+
+    if (nextOptions.length > 0) {
+      setOptions({ ...options, [level + 1]: nextOptions });
+    } else {
+    
+      const newOptions = { ...options };
+      Object.keys(newOptions).forEach((key) => {
+        if (key > level) {
+          delete newOptions[key];
+        }
+      });
+      setOptions(newOptions);
+    }
   };
 
   return (
-    <Box>
-      {treeData.map((node) => (
-        <Box key={node.name} mb={4}>
-          <Button variant="link">{node.description}</Button>
-          {node.values && renderMenuItems(node.values, openMenus, handleToggle)}
-        </Box>
+    <div>
+      {Object.keys(options).map((level) => (
+        <Flex key={level} direction="column" mt={4} maxW={400}>
+          <Select
+            placeholder="Selecciona una opción"
+            onChange={(e) => handleChange(Number(level), e.target.value)}
+            value={selectedValues[level] || ""}
+          >
+            {options[level].map((option) => (
+              <option key={option.value || option.name} value={option.value || option.name || option.display}>
+                {option.name || option.display}
+              </option>
+            ))}
+          </Select>
+        </Flex>
       ))}
-    </Box>
+    </div>
   );
 };
 
-export default DropdownMenu;
+export default function Test1() {
+
+
+  return (
+    <div style={{ padding: "20px" }}>
+      {treeData && <TreeDropdown data={treeData} />}
+    </div>
+  );
+}
